@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "commit-suggester-dataset-builder"
+version = "0.1.0"
+description = "Utility to parse a git repo history log into a dataset"
+authors = ["Alberto Massidda <albertomassidda@aol.com>"]
+license = "GPL 3.0"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+GitPython = "^3.1.14"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
