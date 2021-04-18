@@ -6,6 +6,7 @@ import re
 import os
 import argparse
 import spacy
+from nltk.tokenize import WordPunctTokenizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
@@ -28,6 +29,7 @@ output_msg = f"{filename_prefix}.msg"
 regex_offset = re.compile("@@.+?@@")
 regex_issue = re.compile("#[0-9]+")
 
+tokenizer = WordPunctTokenizer()
 nlp = spacy.load("en_core_web_sm")
 
 repo = RepositoryMining(repo_path, only_in_branch=branch, only_no_merge=True)
@@ -52,8 +54,9 @@ with open(output_diff,"a+") as fp_diff_out:
             msg = msg.split("\n")[0]
             msg = re.sub(regex_issue, '#ISSUE', msg)
 
-            msg_to_parse = msg.lower()
-            doc = nlp(msg_to_parse)
+            msg = msg.lower()
+
+            doc = nlp(msg)
             if not (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT'):
 
                 # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
@@ -74,6 +77,7 @@ with open(output_diff,"a+") as fp_diff_out:
                 diff = modified_file.diff.strip(" \r\n")
                 diff = diff.replace("\n", " <nl> ")
                 diff = re.sub(regex_offset, '', diff)
+                diff = ' '.join([token.strip() for token in tokenizer.tokenize(diff)])
 
                 if modified_file.old_path is None:
                    diff_line.append(f" added {modified_file.new_path}")
@@ -92,7 +96,7 @@ with open(output_diff,"a+") as fp_diff_out:
                 print("-", end='')
                 continue
 
-            diff_line_str = ' '.join(diff_line)
+            diff_line_str = ' '.join(diff_line).replace("< nl >", "<nl>").strip()
 
             fp_diff_out.write(diff_line_str + "\n")
 
