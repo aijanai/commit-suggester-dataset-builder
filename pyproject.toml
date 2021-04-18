@@ -7,7 +7,7 @@ license = "GPL 3.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-GitPython = "^3.1.14"
+PyDriller = "^1.15.5"
 
 [tool.poetry.dev-dependencies]
 
