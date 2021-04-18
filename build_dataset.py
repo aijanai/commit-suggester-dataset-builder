@@ -77,7 +77,6 @@ with open(output_diff,"a+") as fp_diff_out:
                 diff = modified_file.diff.strip(" \r\n")
                 diff = diff.replace("\n", " <nl> ")
                 diff = re.sub(regex_offset, '', diff)
-                diff = ' '.join([token.strip() for token in tokenizer.tokenize(diff)])
 
                 if modified_file.old_path is None:
                    diff_line.append(f" added {modified_file.new_path}")
@@ -90,13 +89,14 @@ with open(output_diff,"a+") as fp_diff_out:
                 if modified_file.new_path is not None and modified_file.old_path is not None:
                    diff_line.append(f" modified {modified_file.new_path}")
                    diff_line.append("<nl>")
-                   diff_line.append(diff[:1000])
+                   diff_line.append(diff[:500])
 
             if len(diff_line) == 0:
                 print("-", end='')
                 continue
 
-            diff_line_str = ' '.join(diff_line).replace("< nl >", "<nl>").strip()
+            diff_line_str = ' '.join(diff_line).strip()
+            diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
 
             fp_diff_out.write(diff_line_str + "\n")
 
