@@ -1,15 +1,22 @@
 # commit-suggester-dataset-builder
-Utility to parse a git repo history log into a dataset
+Utilities to massively download GitHub repositories and parse theis history log into a dataset
 
 
 ## Getting started
+### Downloading repo data
+```
+export CREDENTIALS=<github-user>:<github-api-key>
+export LANGUAGE=java
+./make_top_github_repos.sh
+```
+
 ### spacy initialization
 Download POS tagger data for English (small version):
 ```
 python -m spacy download en_core_web_sm
 ```
 
-### Running it
+### Running the parser
 A repository and a file name prefix are expected.
 For example:
 ```
