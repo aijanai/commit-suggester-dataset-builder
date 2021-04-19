@@ -46,6 +46,7 @@ https://github.com/ansible/awx.git
 https://github.com/AonCyberLabs/Windows-Exploit-Suggester.git
 https://github.com/apache/airflow.git
 https://github.com/apachecn/AiLearning.git
+https://github.com/apache/incubator-mxnet
 https://github.com/apache/superset.git
 https://github.com/apache/tvm.git
 https://github.com/aquasecurity/kube-hunter.git
@@ -182,7 +183,6 @@ https://github.com/edgedb/edgedb.git
 https://github.com/EdjeElectronics/TensorFlow-Object-Detection-API-Tutorial-Train-Multiple-Objects-Windows-10.git
 https://github.com/EdjoLabs/image-match.git
 https://github.com/edx/edx-platform.git
-https://github.com/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.git
 https://github.com/ehForwarderBot/ehForwarderBot.git
 https://github.com/elceef/dnstwist.git
 https://github.com/Eloston/ungoogled-chromium.git
@@ -264,6 +264,7 @@ https://github.com/google-research/albert.git
 https://github.com/google-research/bert.git
 https://github.com/google-research/text-to-text-transfer-transformer.git
 https://github.com/google/tf-quant-finance.git
+https://github.com/google/trax.git
 https://github.com/google/yapf.git
 https://github.com/gorakhargosh/watchdog.git
 https://github.com/graphql-python/graphene-django.git
@@ -586,6 +587,7 @@ https://github.com/pytoolz/toolz.git
 https://github.com/pytorch/examples.git
 https://github.com/pytorch/fairseq.git
 https://github.com/pytorch/ignite.git
+https://github.com/pytorch/pytorch.git
 https://github.com/pytorch/tutorials.git
 https://github.com/pytube/pytube.git
 https://github.com/QingdaoU/OnlineJudge.git
