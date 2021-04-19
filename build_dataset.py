@@ -43,6 +43,8 @@ if os.path.isfile(output_msg):
 total = 0
 added = 0
 
+print(f"Parsing {repo_path}, branch {branch}", flush=True)
+
 with open(output_diff,"a+") as fp_diff_out:
     with open(output_msg,"a+") as fp_msg_out:
 
@@ -60,7 +62,7 @@ with open(output_diff,"a+") as fp_diff_out:
             if not (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT'):
 
                 # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
-                doc_prepended = nlp(f"I {msg_to_parse}")
+                doc_prepended = nlp(f"I {msg}")
 
                 if not (doc_prepended[1].pos_ == 'VERB' or doc_prepended[1].dep_ == 'ROOT' or doc_prepended[2].pos_ == 'VERB' or doc_prepended[2].dep_ == 'ROOT'):
                     if verbose:
