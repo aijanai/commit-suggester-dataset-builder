@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from pydriller import RepositoryMining
+import git
+import sys
 import re
 import os
 import argparse
@@ -37,7 +39,7 @@ if branch == "auto":
             break
 
         try:
-            repo = RepositoryMining(repo_path, only_in_branch='master', only_no_merge=True)
+            repo = RepositoryMining(repo_path, only_in_branch=default_branch, only_no_merge=True)
 
             for commit in repo.traverse_commits():
                 check = commit.msg
@@ -49,7 +51,7 @@ if branch == "auto":
                     break
 
         except git.exc.GitCommandError as gce:
-            pass
+            continue
 
     if not found_default_branch:
         print(f"Can't detect default branch", flush=True)
