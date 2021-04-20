@@ -66,7 +66,8 @@ regex_offset = re.compile("@@.+?@@")
 regex_issue = re.compile("#[0-9]+")
 
 tokenizer = WordPunctTokenizer()
-nlp = spacy.load("en_core_web_sm")
+if not nopos:
+    nlp = spacy.load("en_core_web_sm")
 
 
 repo = RepositoryMining(repo_path, only_in_branch=branch, only_no_merge=True)
@@ -79,6 +80,18 @@ if os.path.isfile(output_msg):
 
 total = 0
 added = 0
+
+def get_condition_starts_with_a_verb(doc, prepended=False):
+    if prepended:
+        if len(doc) > 2:
+            return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT' or doc[2].pos_ == 'VERB' or doc[2].dep_ == 'ROOT')
+        else:
+            return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
+    else:
+        if len(doc) > 1:
+            return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
+        else:
+            return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT')
 
 
 with open(output_diff,"a+") as fp_diff_out:
@@ -94,18 +107,24 @@ with open(output_diff,"a+") as fp_diff_out:
 
             msg = msg.lower()
 
-            doc = nlp(msg)
-            if not (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT'):
+            if not nopos:
+                doc = nlp(msg)
 
-                # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
-                doc_prepended = nlp(f"I {msg}")
-
-                if not (doc_prepended[1].pos_ == 'VERB' or doc_prepended[1].dep_ == 'ROOT' or doc_prepended[2].pos_ == 'VERB' or doc_prepended[2].dep_ == 'ROOT'):
-                    if verbose:
-                       print(f"skipping {msg}", end='')
-                    else:
-                        print("s", end='')
+                if len(doc)==0:
+                    print("-", end='')
                     continue
+
+                if not get_condition_starts_with_a_verb(doc, prepended=False):
+
+                    # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
+                    doc_prepended = nlp(f"I {msg}")
+
+                    if not get_condition_starts_with_a_verb(doc, prepended=True):
+                        if verbose:
+                           print(f"skipping {msg}", end='')
+                        else:
+                            print("s", end='')
+                        continue
 
             diff_line = []
 
