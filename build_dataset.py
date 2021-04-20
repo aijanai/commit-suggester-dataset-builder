@@ -47,7 +47,7 @@ if branch == "auto":
                 if check is not None:
                     found_default_branch = True
                     branch = default_branch
-                    print(f"using {branch} branch", flush=True)
+                    print(f"using {branch}", flush=True)
                     break
 
         except git.exc.GitCommandError as gce:
