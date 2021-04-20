@@ -81,7 +81,7 @@ if os.path.isfile(output_msg):
 total = 0
 added = 0
 
-def get_condition_starts_with_a_verb(doc, prepended=False):
+def _get_condition_starts_with_a_verb(doc, prepended=False):
     if prepended:
         if len(doc) > 2:
             return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT' or doc[2].pos_ == 'VERB' or doc[2].dep_ == 'ROOT')
@@ -94,72 +94,98 @@ def get_condition_starts_with_a_verb(doc, prepended=False):
             return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT')
 
 
+def _clean_msg_string(msg):
+    msg = msg.split("\n")[0]
+    msg = re.sub(regex_issue, '#ISSUE', msg)
+
+    msg = msg.lower()
+    return msg
+
+
+def _clean_diff_string(diff):
+    diff = diff.strip(" \r\n")
+    diff = diff.replace("\n", " <nl> ")
+    diff = re.sub(regex_offset, '', diff)
+    return diff
+
+
+def _is_valid_msg(msg):
+    doc = nlp(msg)
+
+    if len(doc)==0:
+        print("-", end='')
+        return False
+
+    if not _get_condition_starts_with_a_verb(doc, prepended=False):
+
+        # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
+        doc_prepended = nlp(f"I {msg}")
+
+        if not _get_condition_starts_with_a_verb(doc, prepended=True):
+            if verbose:
+               print(f"skipping {msg}", end='')
+            else:
+                print("s", end='')
+            return False
+
+    return True
+
+
+def _get_diff_string(modifications):
+    diff_line = []
+
+    for i, modified_file in enumerate(modifications): # here you have the list of modified files
+        diff = _clean_diff_string(modified_file.diff)
+
+        if modified_file.old_path is None:
+           diff_line.append(f" added {modified_file.new_path}")
+           continue
+
+        if modified_file.new_path is None:
+           diff_line.append(f" deleted {modified_file.old_path}")
+           continue
+
+        if modified_file.new_path is not None and modified_file.old_path is not None:
+           diff_line.append(f" modified {modified_file.new_path}")
+           diff_line.append("<nl>")
+           diff_line.append(diff[:500])
+
+    if len(diff_line) == 0:
+        print("-", end='')
+        return ''
+
+    diff_line_str = ' '.join(diff_line).strip()
+    diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
+
+    return diff_line_str
+
+
+def process(commit):
+    msg = _clean_msg_string(commit.msg)
+
+    if not nopos:
+        if not _is_valid_msg(msg):
+            msg = ''
+
+    diff = _get_diff_string(commit.modifications)
+
+    return (msg, diff)
+
+
 with open(output_diff,"a+") as fp_diff_out:
     with open(output_msg,"a+") as fp_msg_out:
 
         for commit in repo.traverse_commits():
-
             total += 1
 
-            msg = commit.msg
-            msg = msg.split("\n")[0]
-            msg = re.sub(regex_issue, '#ISSUE', msg)
+            msg, diff_line_str = process(commit)
 
-            msg = msg.lower()
+            if len(msg) > 0 and len(diff_line_str) > 0:
+                added += 1
 
-            if not nopos:
-                doc = nlp(msg)
-
-                if len(doc)==0:
-                    print("-", end='')
-                    continue
-
-                if not get_condition_starts_with_a_verb(doc, prepended=False):
-
-                    # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
-                    doc_prepended = nlp(f"I {msg}")
-
-                    if not get_condition_starts_with_a_verb(doc, prepended=True):
-                        if verbose:
-                           print(f"skipping {msg}", end='')
-                        else:
-                            print("s", end='')
-                        continue
-
-            diff_line = []
-
-            for i, modified_file in enumerate(commit.modifications): # here you have the list of modified files
-                diff = modified_file.diff.strip(" \r\n")
-                diff = diff.replace("\n", " <nl> ")
-                diff = re.sub(regex_offset, '', diff)
-
-                if modified_file.old_path is None:
-                   diff_line.append(f" added {modified_file.new_path}")
-                   continue
-
-                if modified_file.new_path is None:
-                   diff_line.append(f" deleted {modified_file.old_path}")
-                   continue
-
-                if modified_file.new_path is not None and modified_file.old_path is not None:
-                   diff_line.append(f" modified {modified_file.new_path}")
-                   diff_line.append("<nl>")
-                   diff_line.append(diff[:500])
-
-            if len(diff_line) == 0:
-                print("-", end='')
-                continue
-
-
-            diff_line_str = ' '.join(diff_line).strip()
-            diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
-
-            fp_msg_out.write(msg + "\n")
-            fp_diff_out.write(diff_line_str + "\n")
-
-            added += 1
-
-            print(".", end='', flush=True)
+                fp_msg_out.write(msg + "\n")
+                fp_diff_out.write(diff_line_str + "\n")
+                print(".", end='', flush=True)
 
 print(flush=True)
 
