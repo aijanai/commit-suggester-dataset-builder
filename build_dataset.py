@@ -116,6 +116,10 @@ def _is_valid_msg(msg):
         print("-", end='')
         return False
 
+    if "rollback" in doc[0].text:
+        print("r", end='')
+        return False
+
     if not _get_condition_starts_with_a_verb(doc, prepended=False):
 
         # sometimes POS taggers misinterpret verbs for adjectives; add leading "I" as per "van Hal et al., 2019" V-DO relaxation workaround
