@@ -29,11 +29,11 @@ print(f"Parsing {repo_path}, ", end='', flush=True)
 
 if branch == "auto":
 
-    print(f"detecting branch...", end='', flush=True)
+    print(f"detecting branch... ", end='', flush=True)
 
     found_default_branch = False
 
-    for default_branch in ['master', 'main', 'develop']:
+    for default_branch in ['master', 'main', 'develop', 'devel']:
 
         if found_default_branch:
             break
@@ -47,7 +47,7 @@ if branch == "auto":
                 if check is not None:
                     found_default_branch = True
                     branch = default_branch
-                    print(f"Found {branch} branch, will use this", flush=True)
+                    print(f"using {branch} branch", flush=True)
                     break
 
         except git.exc.GitCommandError as gce:
@@ -144,4 +144,4 @@ with open(output_diff,"a+") as fp_diff_out:
 
 print(flush=True)
 
-print(f"Validated and saved {100*round(added/total,2)}% of commits on branch {branch}")
+print(f"Validated and saved {100*round(added/total,4)}% of commits on branch {branch}")
