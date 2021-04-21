@@ -82,7 +82,8 @@ total = 0
 added = 0
 
 def _get_condition_starts_with_a_verb(doc, prepended=False):
-    if prepended:
+
+    if prepended :
         if len(doc) > 2:
             return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT' or doc[2].pos_ == 'VERB' or doc[2].dep_ == 'ROOT')
         else:
@@ -119,6 +120,16 @@ def _is_valid_msg(msg):
     if "rollback" in doc[0].text:
         print("r", end='')
         return False
+
+    starts_with_a_tag = "[" == msg[:1]
+
+    if starts_with_a_tag :
+
+        tmp = msg.split()
+        _ = tmp.pop(0)
+        msg = ' '.join(tmp)
+
+        return _is_valid_msg(msg)
 
     if not _get_condition_starts_with_a_verb(doc, prepended=False):
 
