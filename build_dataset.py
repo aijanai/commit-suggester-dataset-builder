@@ -14,7 +14,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
 parser.add_argument("prefix", help="Input file prefix to search for <prefix>.diff and <prefix>.msg files")
 parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chaim: 'master', 'main', 'develop', then throws error")
-parser.add_argument("-nopos", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
+parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
+parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
 parser.add_argument("-v", "--verbose", action="store_true", help="Suppress output")
 
 args = parser.parse_args()
@@ -22,10 +23,16 @@ args = parser.parse_args()
 repo_path = args.repo_path
 filename_prefix = args.prefix
 verbose = args.verbose
-nopos = args.no_pos_tagging
+skip_pos_tagging = args.no_pos_tagging
+skip_already_existing = args.skip_already_existing
 branch = args.branch
 
 print(f"Parsing {repo_path}, ", end='', flush=True)
+
+if skip_pos_tagging :
+    print("will skip POS tagging, ", end='', flush=True)
+if skip_already_existing :
+    print("will skip existing files, ", end='', flush=True)
 
 if branch == "auto":
 
@@ -64,19 +71,26 @@ output_msg = f"{filename_prefix}.msg"
 
 regex_offset = re.compile("@@.+?@@")
 regex_issue = re.compile("#[0-9]+")
+regex_nonascii = re.compile(r'[^\x00-\x7F]+')
 
 tokenizer = WordPunctTokenizer()
-if not nopos:
+if not skip_pos_tagging:
     nlp = spacy.load("en_core_web_sm")
 
 
 repo = RepositoryMining(repo_path, only_in_branch=branch, only_no_merge=True)
 
 if os.path.isfile(output_diff):
-    os.unlink(output_diff)
+    if skip_already_existing :
+        sys.exit(0)
+    else:
+        os.unlink(output_diff)
 
 if os.path.isfile(output_msg):
-    os.unlink(output_msg)
+    if skip_already_existing :
+        sys.exit(0)
+    else:
+        os.unlink(output_msg)
 
 total = 0
 added = 0
@@ -98,6 +112,7 @@ def _get_condition_starts_with_a_verb(doc, prepended=False):
 def _clean_msg_string(msg):
     msg = msg.split("\n")[0]
     msg = re.sub(regex_issue, '#ISSUE', msg)
+    msg = re.sub(regex_nonascii, '', msg)
 
     msg = msg.lower()
     return msg
@@ -107,6 +122,7 @@ def _clean_diff_string(diff):
     diff = diff.strip(" \r\n")
     diff = diff.replace("\n", " <nl> ")
     diff = re.sub(regex_offset, '', diff)
+    diff = re.sub(regex_nonascii, '', diff)
     return diff
 
 
@@ -178,7 +194,7 @@ def _get_diff_string(modifications):
 def process(commit):
     msg = _clean_msg_string(commit.msg)
 
-    if not nopos:
+    if not skip_pos_tagging:
         if not _is_valid_msg(msg):
             msg = ''
 
