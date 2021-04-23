@@ -1,3 +1,8 @@
 #!/bin/bash
 
-cat repos|parallel -j  ./build_dataset.py -E ../top_github_python/{} datasets/{}
+if [[ $# -lt 1 ]]; then
+	echo "Usage: $0 <repos dir> <datasets dir>"
+	exit 1
+fi
+
+cat repos|parallel -j 30 ./build_dataset.py -E $1/{} $2/{}
