@@ -103,13 +103,11 @@ def _get_condition_starts_with_a_verb(doc, prepended=False):
         else:
             return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
     else:
-        if len(doc) > 1:
-            return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
-        else:
-            return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT')
+        return (doc[0].pos_ == 'VERB' or doc[0].dep_ == 'ROOT' or doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
 
 
 def _clean_msg_string(msg):
+    msg = msg[:1000]
     msg = msg.split("\n")[0]
     msg = re.sub(regex_issue, '#ISSUE', msg)
     msg = re.sub(regex_nonascii, '', msg)
@@ -119,6 +117,7 @@ def _clean_msg_string(msg):
 
 
 def _clean_diff_string(diff):
+    diff = diff[:1000]
     diff = diff.strip(" \r\n")
     diff = diff.replace("\n", " <nl> ")
     diff = re.sub(regex_offset, '', diff)
@@ -129,11 +128,12 @@ def _clean_diff_string(diff):
 def _is_valid_msg(msg):
     doc = nlp(msg)
 
-    if len(doc)==0:
-        print("-", end='')
+    # at least 2 words commit message
+    if len(doc) < 2:
+        print("s", end='')
         return False
 
-    if "rollback" in doc[0].text:
+    if "rollback" in doc[0].text.lower():
         print("r", end='')
         return False
 
