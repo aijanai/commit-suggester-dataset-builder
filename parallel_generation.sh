@@ -5,4 +5,6 @@ if [[ $# -lt 1 ]]; then
 	exit 1
 fi
 
+mkdir -p $2
+
 ls $1 |parallel -j 30 ./build_dataset.py -E $1/{} $2/{}
