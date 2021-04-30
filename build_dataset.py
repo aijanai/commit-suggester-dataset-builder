@@ -16,7 +16,8 @@ parser.add_argument("prefix", help="Input file prefix to search for <prefix>.dif
 parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chaim: 'master', 'main', 'develop', then throws error")
 parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
 parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
-parser.add_argument("-v", "--verbose", action="store_true", help="Suppress output")
+parser.add_argument("-A", "--only-atomic-commits", action="store_true", help="Skip commits with more than 1 file")
+parser.add_argument("-v", "--verbose", action="store_true", help="More output")
 
 args = parser.parse_args()
 
@@ -24,6 +25,7 @@ repo_path = args.repo_path
 filename_prefix = args.prefix
 verbose = args.verbose
 skip_pos_tagging = args.no_pos_tagging
+skip_non_atomic_commits = args.only_atomic_commits
 skip_already_existing = args.skip_already_existing
 branch = args.branch
 
@@ -33,6 +35,8 @@ if skip_pos_tagging :
     print("will skip POS tagging, ", end='', flush=True)
 if skip_already_existing :
     print("will skip existing files, ", end='', flush=True)
+if skip_non_atomic_commits :
+    print("will skip non atomic commits, ", end='', flush=True)
 
 if branch == "auto":
 
@@ -165,8 +169,13 @@ def _is_valid_msg(msg):
 def _get_diff_string(modifications):
     diff_line = []
 
+    if skip_non_atomic_commits and len(modifications)>1 :
+        print("a", end='')
+        return ''
+
     for i, modified_file in enumerate(modifications): # here you have the list of modified files
         diff = _clean_diff_string(modified_file.diff)
+
 
         if modified_file.old_path is None:
            diff_line.append(f" added {modified_file.new_path}")
