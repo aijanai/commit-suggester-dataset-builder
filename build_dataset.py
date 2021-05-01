@@ -10,6 +10,10 @@ import argparse
 import spacy
 from nltk.tokenize import WordPunctTokenizer
 
+min_tokens_msg_default=2
+max_tokens_msg_default=30
+max_tokens_diff_default=100
+
 parser = argparse.ArgumentParser(description="Generates a bitext from a git repository's log history, one with diff patches and the other with corresponding commit messages")
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
 parser.add_argument("prefix", help="Input file prefix to search for <prefix>.diff and <prefix>.msg files")
@@ -17,6 +21,9 @@ parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (
 parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
 parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
 parser.add_argument("-A", "--only-atomic-commits", action="store_true", help="Skip commits with more than 1 file")
+parser.add_argument("-m", "--min-tokens", default=min_tokens_msg_default, help=f"Minimum number of tokens per commit message (less will be skipped); default: {min_tokens_msg_default}")
+parser.add_argument("-M", "--max-tokens-msg", default=max_tokens_msg_default, help=f"Maximum number of tokens in commit message (more will be skipped); default: {max_tokens_msg_default}")
+parser.add_argument("-D", "--max-tokens-diff", default=max_tokens_diff_default, help=f"Maximum number of tokens in diff patch (more will be skipped); default: {max_tokens_diff_default}")
 parser.add_argument("-v", "--verbose", action="store_true", help="More output")
 
 args = parser.parse_args()
@@ -24,6 +31,9 @@ args = parser.parse_args()
 repo_path = args.repo_path
 filename_prefix = args.prefix
 verbose = args.verbose
+min_tokens = args.min_tokens
+max_tokens_msg = args.max_tokens_msg
+max_tokens_diff = args.max_tokens_diff
 skip_pos_tagging = args.no_pos_tagging
 skip_non_atomic_commits = args.only_atomic_commits
 skip_already_existing = args.skip_already_existing
@@ -37,6 +47,8 @@ if skip_already_existing :
     print("will skip existing files, ", end='', flush=True)
 if skip_non_atomic_commits :
     print("will skip non atomic commits, ", end='', flush=True)
+
+print(f"will skip messages lesser than {min_tokens} and longer than {max_tokens_msg} tokens, patches longer than {max_tokens_diff}, ", end='', flush=True)
 
 if branch == "auto":
 
@@ -102,7 +114,7 @@ added = 0
 def _get_condition_starts_with_a_verb(doc, prepended=False):
 
     if prepended :
-        if len(doc) > 2:
+        if len(doc) > min_tokens:
             return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT' or doc[2].pos_ == 'VERB' or doc[2].dep_ == 'ROOT')
         else:
             return (doc[1].pos_ == 'VERB' or doc[1].dep_ == 'ROOT')
@@ -133,7 +145,7 @@ def _is_valid_msg(msg):
     doc = nlp(msg)
 
     # at least 2 words commit message
-    if len(doc) < 2 or len(doc) > 30:
+    if len(doc) < min_tokens or len(doc) > max_tokens_msg:
         print("l", end='')
         return False
 
@@ -169,7 +181,7 @@ def _is_valid_msg(msg):
 def _is_valid_diff(diff_line_str):
     doc = nlp(diff_line_str)
 
-    if len(doc) > 500:
+    if len(doc) > max_tokens_diff:
         print("l", end='')
         return False
     else:
