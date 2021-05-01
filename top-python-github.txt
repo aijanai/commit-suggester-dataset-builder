@@ -609,7 +609,6 @@ https://github.com/pytoolz/toolz.git
 https://github.com/pytorch/examples.git
 https://github.com/pytorch/fairseq.git
 https://github.com/pytorch/ignite.git
-https://github.com/pytorch/pytorch.git
 https://github.com/pytorch/tutorials.git
 https://github.com/pytube/pytube.git
 https://github.com/QingdaoU/OnlineJudge.git
