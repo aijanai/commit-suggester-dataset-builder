@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LANGUAGE=${LANGUAGE:-python}
-REPO_LIST=top-$LANGUAGE-github.json
+REPO_LIST=top-$LANGUAGE-github.txt
 
 cat /dev/null > $REPO_LIST
 

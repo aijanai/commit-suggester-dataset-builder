@@ -5,7 +5,7 @@ if [[ $# -lt 1 ]]; then
 	exit 1
 fi
 
-ls $1| sed 's/.msg//g' | sed 's/.diff//g' | sort -u |parallel -j 30 ./split_test_train_valid.py -v $1/{}
+#ls $1| sed 's/\.msg$//g' | sed 's/\.diff$//g' | sort -u |parallel -j 30 ./split_test_train_valid.py -v $1/{}
 
 
 cat $1/*.valid.msg > dataset.valid.msg
