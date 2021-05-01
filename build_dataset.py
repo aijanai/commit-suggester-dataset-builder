@@ -10,7 +10,7 @@ import argparse
 import spacy
 from nltk.tokenize import WordPunctTokenizer
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="Generates a bitext from a git repository's log history, one with diff patches and the other with corresponding commit messages")
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
 parser.add_argument("prefix", help="Input file prefix to search for <prefix>.diff and <prefix>.msg files")
 parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chaim: 'master', 'main', 'develop', then throws error")
@@ -121,7 +121,7 @@ def _clean_msg_string(msg):
 
 
 def _clean_diff_string(diff):
-    diff = diff[:1000]
+    diff = diff[:5000]
     diff = diff.strip(" \r\n")
     diff = diff.replace("\n", " <nl> ")
     diff = re.sub(regex_offset, '', diff)
@@ -133,8 +133,8 @@ def _is_valid_msg(msg):
     doc = nlp(msg)
 
     # at least 2 words commit message
-    if len(doc) < 2:
-        print("s", end='')
+    if len(doc) < 2 or len(doc) > 30:
+        print("l", end='')
         return False
 
     if "rollback" in doc[0].text.lower():
@@ -164,6 +164,16 @@ def _is_valid_msg(msg):
             return False
 
     return True
+
+
+def _is_valid_diff(diff_line_str):
+    doc = nlp(diff_line_str)
+
+    if len(doc) > 500:
+        print("l", end='')
+        return False
+    else:
+        return True
 
 
 def _get_diff_string(modifications):
@@ -197,6 +207,9 @@ def _get_diff_string(modifications):
     diff_line_str = ' '.join(diff_line).strip()
     diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
 
+    if not _is_valid_diff(diff_line_str):
+        return ''
+
     return diff_line_str
 
 
@@ -207,7 +220,11 @@ def process(commit):
         if not _is_valid_msg(msg):
             msg = ''
 
-    diff = _get_diff_string(commit.modifications)
+    if len(msg) > 0:
+        diff = _get_diff_string(commit.modifications)
+    else:
+        # no need to parse diff patch, if msg is empty
+        diff = ''
 
     return (msg, diff)
 
