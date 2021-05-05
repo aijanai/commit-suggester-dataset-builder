@@ -38,6 +38,13 @@ for i in [output_train_diff, output_train_msg, output_test_diff, output_test_msg
 
 with open(input_diff,"r+") as fp_diff_in:
     with open(input_msg,"r+") as fp_msg_in:
+
+        diffs = [i.strip() for i in list(fp_diff_in)]
+        msgs = [i.strip() for i in list(fp_msg_in)]
+
+        if len(diffs) < 8 or len(msgs) < 8:
+            sys.exit(0)
+
         with open(output_train_diff,"a+") as fp_diff_train:
             with open(output_train_msg,"a+") as fp_msg_train:
                 with open(output_test_diff,"a+") as fp_diff_test:
@@ -45,9 +52,6 @@ with open(input_diff,"r+") as fp_diff_in:
                         with open(output_valid_diff,"a+") as fp_diff_valid:
                             with open(output_valid_msg,"a+") as fp_msg_valid:
 
-                                diffs = [i.strip() for i in list(fp_diff_in)]
-                                msgs = [i.strip() for i in list(fp_msg_in)]
-                        
                                 df_msg = pd.DataFrame(msgs, columns =['msg'])
                                 df_diff = pd.DataFrame(diffs, columns =['diff'])
                         
