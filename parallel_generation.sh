@@ -7,4 +7,4 @@ fi
 
 mkdir -p $2
 
-ls $1 |parallel -j 80 ./build_dataset.py -A -E $1/{} $2/{}
+ls $1 |parallel -j 80 ./git2bitext.py -A -E $1/{} $2/{}
