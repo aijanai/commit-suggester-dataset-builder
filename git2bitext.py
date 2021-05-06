@@ -20,6 +20,7 @@ parser.add_argument("prefix", help="Input file prefix to search for <prefix>.dif
 parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chaim: 'master', 'main', 'develop', then throws error")
 parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
 parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
+parser.add_argument("-T", "--include-trivial-commits", action="store_true", help="Do include commits beginning with \"rollback\", \"bump\", \"prepare\", \"update\"")
 parser.add_argument("-A", "--only-atomic-commits", action="store_true", help="Skip commits with more than 1 file")
 parser.add_argument("-m", "--min-tokens", default=min_tokens_msg_default, help=f"Minimum number of tokens per commit message (less will be skipped); default: {min_tokens_msg_default}")
 parser.add_argument("-M", "--max-tokens-msg", default=max_tokens_msg_default, help=f"Maximum number of tokens in commit message (more will be skipped); default: {max_tokens_msg_default}")
@@ -31,10 +32,11 @@ args = parser.parse_args()
 repo_path = args.repo_path
 filename_prefix = args.prefix
 verbose = args.verbose
-min_tokens = args.min_tokens
-max_tokens_msg = args.max_tokens_msg
-max_tokens_diff = args.max_tokens_diff
+min_tokens = int(args.min_tokens)
+max_tokens_msg = int(args.max_tokens_msg)
+max_tokens_diff = int(args.max_tokens_diff)
 skip_pos_tagging = args.no_pos_tagging
+include_trivial_commits = args.include_trivial_commits
 skip_non_atomic_commits = args.only_atomic_commits
 skip_already_existing = args.skip_already_existing
 branch = args.branch
@@ -149,9 +151,12 @@ def _is_valid_msg(msg):
         print("l", end='')
         return False
 
-    if "rollback" in doc[0].text.lower():
-        print("r", end='')
-        return False
+    if not include_trivial_commits:
+       for stop_word in ["rollback", "bump", "prepare", "update"]:
+            # skip trivial messages as per "Liu et al., 2018"
+            if stop_word in doc[0].text.lower():
+                print("t", end='')
+                return False
 
     starts_with_a_tag = "[" == msg[:1]
 
@@ -170,7 +175,7 @@ def _is_valid_msg(msg):
 
         if not _get_condition_starts_with_a_verb(doc, prepended=True):
             if verbose:
-               print(f"skipping {msg}", end='')
+               print(f"skipping {msg} ", end='')
             else:
                 print("s", end='')
             return False
