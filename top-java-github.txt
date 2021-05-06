@@ -505,7 +505,6 @@ https://github.com/kaushikgopal/RxJava-Android-Samples.git
 https://github.com/kdn251/interviews.git
 https://github.com/KeepSafe/TapTargetView.git
 https://github.com/kekingcn/kkFileView.git
-https://github.com/kevin-wayne/algs4.git
 https://github.com/keyboardsurfer/Crouton.git
 https://github.com/keycloak/keycloak.git
 https://github.com/kiegroup/drools.git
