@@ -13,13 +13,18 @@ from nltk.tokenize import WordPunctTokenizer
 min_tokens_msg_default=2
 max_tokens_msg_default=30
 max_tokens_diff_default=100
+
+branches_search_chain = ['main', 'master', 'develop', 'devel']
+branches_search_chain_string = ', '.join([f"'{x}'" for x in branches_search_chain])
+
 stop_prefixes = ["rollback", "bump version", "prepare version", "update changelog", "update gitignore", "update readme", "update submodule", "modify dockerfile", "modify makefile"]
 stop_prefixes_string = ', '.join([f"'{x}'" for x in stop_prefixes])
+
 
 parser = argparse.ArgumentParser(description="Generates a bitext from a git repository's log history, one with diff patches and the other with corresponding commit messages")
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
 parser.add_argument("prefix", help="Input file prefix to search for <prefix>.diff and <prefix>.msg files")
-parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chain: 'master', 'main', 'develop', 'devel', then gives up and throws error)")
+parser.add_argument("-b", "--branch", default="auto", help=f"Git branch to scan (default: autodetect; fall back chain: {branches_search_chain_string}, then gives up and throws error)")
 parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
 parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
 parser.add_argument("-T", "--include-trivial-commits", action="store_true", help=f"Don't skip commits beginning with following prefixes: {stop_prefixes_string}")
@@ -54,7 +59,11 @@ if skip_already_existing :
 if skip_non_atomic_commits :
     print("will skip non atomic commits, ", end='', flush=True)
 
-print(f"will skip messages lesser than {min_tokens} and longer than {max_tokens_msg} tokens, patches longer than {max_tokens_diff}, ", end='', flush=True)
+print(f"will skip messages lesser than {min_tokens} and longer than {max_tokens_msg} tokens", end='', flush=True)
+if cut_exceeding_diff :
+    print(f", cut patches longer than {max_tokens_diff}, ", end='', flush=True)
+else:
+    print(f", skip patches longer than {max_tokens_diff}, ", end='', flush=True)
 
 if branch == "auto":
 
@@ -62,7 +71,7 @@ if branch == "auto":
 
     found_default_branch = False
 
-    for default_branch in ['master', 'main', 'develop', 'devel']:
+    for default_branch in branches_search_chain :
 
         if found_default_branch:
             break
