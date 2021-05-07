@@ -13,15 +13,18 @@ from nltk.tokenize import WordPunctTokenizer
 min_tokens_msg_default=2
 max_tokens_msg_default=30
 max_tokens_diff_default=100
+stop_prefixes = ["rollback", "bump version", "prepare version", "update changelog", "update gitignore", "update readme", "update submodule", "modify dockerfile", "modify makefile"]
+stop_prefixes_string = ', '.join([f"'{x}'" for x in stop_prefixes])
 
 parser = argparse.ArgumentParser(description="Generates a bitext from a git repository's log history, one with diff patches and the other with corresponding commit messages")
 parser.add_argument("repo_path", help="Path to the repo location on the filesystem")
 parser.add_argument("prefix", help="Input file prefix to search for <prefix>.diff and <prefix>.msg files")
-parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chaim: 'master', 'main', 'develop', then throws error")
+parser.add_argument("-b", "--branch", default="auto", help="Git branch to scan (default: autodetect; fall back chain: 'master', 'main', 'develop', 'devel', then gives up and throws error)")
 parser.add_argument("-P", "--no-pos-tagging", action="store_true", help="Skip POS tagging")
 parser.add_argument("-E", "--skip-already-existing", action="store_true", help="Skip if already existing, without overwriting")
-parser.add_argument("-T", "--include-trivial-commits", action="store_true", help="Do include commits beginning with \"rollback\", \"bump\", \"prepare\", \"update\"")
+parser.add_argument("-T", "--include-trivial-commits", action="store_true", help=f"Don't skip commits beginning with following prefixes: {stop_prefixes_string}")
 parser.add_argument("-A", "--only-atomic-commits", action="store_true", help="Skip commits with more than 1 file")
+parser.add_argument("-C", "--cut-exceeding-diff", action="store_true", help="Do not throw away patches exceeding maximum length, but just cut them to the allowed maximum")
 parser.add_argument("-m", "--min-tokens", default=min_tokens_msg_default, help=f"Minimum number of tokens per commit message (less will be skipped); default: {min_tokens_msg_default}")
 parser.add_argument("-M", "--max-tokens-msg", default=max_tokens_msg_default, help=f"Maximum number of tokens in commit message (more will be skipped); default: {max_tokens_msg_default}")
 parser.add_argument("-D", "--max-tokens-diff", default=max_tokens_diff_default, help=f"Maximum number of tokens in diff patch (more will be skipped); default: {max_tokens_diff_default}")
@@ -36,6 +39,7 @@ min_tokens = int(args.min_tokens)
 max_tokens_msg = int(args.max_tokens_msg)
 max_tokens_diff = int(args.max_tokens_diff)
 skip_pos_tagging = args.no_pos_tagging
+cut_exceeding_diff = args.cut_exceeding_diff
 include_trivial_commits = args.include_trivial_commits
 skip_non_atomic_commits = args.only_atomic_commits
 skip_already_existing = args.skip_already_existing
@@ -125,6 +129,7 @@ def _get_condition_starts_with_a_verb(doc, prepended=False):
 
 
 def _clean_msg_string(msg):
+    # limit message to 1K since we are taking only first sentence
     msg = msg[:1000]
     msg = msg.split("\n")[0]
     msg = re.sub(regex_issue, '#ISSUE', msg)
@@ -135,7 +140,8 @@ def _clean_msg_string(msg):
 
 
 def _clean_diff_string(diff):
-    diff = diff[:5000]
+    # limit patch to 100KB
+    diff = diff[:100000]
     diff = diff.strip(" \r\n")
     diff = diff.replace("\n", " <nl> ")
     diff = re.sub(regex_offset, '', diff)
@@ -152,9 +158,9 @@ def _is_valid_msg(msg):
         return False
 
     if not include_trivial_commits:
-       for stop_word in ["rollback", "bump", "prepare", "update"]:
+       for stop_word in stop_prefixes:
             # skip trivial messages as per "Liu et al., 2018"
-            if stop_word in doc[0].text.lower():
+            if stop_word in doc[0].text.lower() + " " + doc[1].text.lower():
                 print("t", end='')
                 return False
 
@@ -186,8 +192,7 @@ def _is_valid_msg(msg):
 def _is_valid_diff(diff_line_str):
     doc = nlp(diff_line_str)
 
-    if len(doc) > max_tokens_diff:
-        print("l", end='')
+    if len(doc) > max_tokens_diff :
         return False
     else:
         return True
@@ -215,18 +220,30 @@ def _get_diff_string(modifications):
         if modified_file.new_path is not None and modified_file.old_path is not None:
            diff_line.append(f" modified {modified_file.new_path}")
            diff_line.append("<nl>")
-           diff_line.append(diff[:500])
+           diff_line.append(diff)
 
     if len(diff_line) == 0:
         print("-", end='')
         return ''
 
-    diff_line_str = ' '.join(diff_line).strip()
-    diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
+    diff_line_str = _recompile_tokenized_diff(diff_line)
 
     if not _is_valid_diff(diff_line_str):
-        return ''
+        if not cut_exceeding_diff :
+            print("l", end='')
+            return ''
+        else:
+            doc = nlp(diff_line_str)
+            doc = doc[:max_tokens_diff]
+            diff_line = [ x for x.text in doc]
+            diff_line_str = _recompile_tokenized_diff(diff_line)
+            print("c", end="")
 
+    return diff_line_str
+
+def _recompile_tokenized_diff(diff_line):
+    diff_line_str = ' '.join(diff_line).strip()
+    diff_line_str = ' '.join([token.strip() for token in tokenizer.tokenize(diff_line_str)]).replace("< nl >", "<nl>")
     return diff_line_str
 
 
