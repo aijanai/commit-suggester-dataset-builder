@@ -6,7 +6,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 if [[ -z $3 ]]; then
-	TOKENS=150
+	TOKENS=100
 else
 	TOKENS=$3
 fi
