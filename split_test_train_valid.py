@@ -10,12 +10,14 @@ import csv
 
 parser = argparse.ArgumentParser()
 parser.add_argument("filename_prefix_path", help="Prefix path to the couple of files we want to split. It expects .msg and .diff files for the given prefix path.")
+parser.add_argument("-d", "--dry-run", action="store_true", help="Dry run, checks for datasets being of same length")
 parser.add_argument("-v", "--verbose", action="store_true", help="Debug output")
 
 args = parser.parse_args()
 
 filename_prefix = args.filename_prefix_path
 verbose = args.verbose
+dry_run = args.dry_run
 
 if verbose:
     print(f"Splitting {filename_prefix} ")
@@ -33,18 +35,25 @@ output_valid_diff = f"{filename_prefix}.valid.diff"
 output_valid_msg = f"{filename_prefix}.valid.msg"
 
 for i in [output_train_diff, output_train_msg, output_test_diff, output_test_msg, output_valid_msg, output_valid_diff] :
-    if os.path.isfile(i):
+    if os.path.isfile(i) and not dry_run:
         os.unlink(i)
 
 with open(input_diff,"r+") as fp_diff_in:
     with open(input_msg,"r+") as fp_msg_in:
 
-        diffs = [i.strip() for i in list(fp_diff_in)]
-        msgs = [i.strip() for i in list(fp_msg_in)]
+        diffs = [i.strip("\n\r") for i in list(fp_diff_in)]
+        msgs = [i.strip("\n\r") for i in list(fp_msg_in)]
+
+        if len(diffs) != len(msgs) :
+            print(f"ERROR: {filename_prefix} diffs ({len(diffs)}) and msgs ({len(msgs)}) length mismatch")
+            sys.exit(1)
+
+        if dry_run:
+            sys.exit(0)
 
         if len(diffs) < 8 or len(msgs) < 8:
             sys.exit(0)
-
+        
         with open(output_train_diff,"a+") as fp_diff_train:
             with open(output_train_msg,"a+") as fp_msg_train:
                 with open(output_test_diff,"a+") as fp_diff_test:
