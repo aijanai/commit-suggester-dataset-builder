@@ -406,7 +406,6 @@ https://github.com/igrigorik/em-synchrony.git
 https://github.com/igrigorik/em-websocket.git
 https://github.com/igrigorik/gharchive.org.git
 https://github.com/igrigorik/http-2.git
-https://github.com/illacceptanything/illacceptanything.git
 https://github.com/ilyakatz/data-migrate.git
 https://github.com/imathis/fancy-buttons.git
 https://github.com/imathis/octopress.git

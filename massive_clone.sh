@@ -5,4 +5,12 @@ if [[ $# -lt 1 ]]; then
 	exit 1
 fi
 
-cat $1 |while read i; do git clone --bare $i $(echo $i|awk 'BEGIN{FS="/"}{printf("%s-%s\n",$4,$5)}'); done
+TMP_FILE=/tmp/massive_clone
+
+echo /dev/null > $TMP_FILE
+
+cat $1 |while read i; do echo "git clone --bare $i $(echo $i|awk 'BEGIN{FS="/"}{printf("%s-%s\n",$4,$5)}')" >> $TMP_FILE ; done
+
+parallel -j 30 < $TMP_FILE
+
+rm $TMP_FILE

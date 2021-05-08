@@ -15,4 +15,6 @@ echo "Using $TOKENS tokens"
 
 mkdir -p $2
 
-ls $1 |parallel -j 80 ./git2bitext.py -D $TOKENS -A -E $1/{} $2/{}
+CPUS=$(cat /proc/cpuinfo |grep processor|wc -l)
+
+ls $1 |parallel -j $CPUS ./git2bitext.py -D $TOKENS -A -E $1/{} $2/{}
