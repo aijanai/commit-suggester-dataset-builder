@@ -141,6 +141,7 @@ def _clean_msg_string(msg):
     # limit message to 1K since we are taking only first sentence
     msg = msg[:1000]
     msg = msg.split("\n")[0]
+    msg = msg.replace("\r",'')
     msg = re.sub(regex_issue, '#ISSUE', msg)
     msg = re.sub(regex_nonascii, '', msg)
 
@@ -168,8 +169,9 @@ def _is_valid_msg(msg):
 
     if not include_trivial_commits:
        for stop_word in stop_prefixes:
+            stop_word = stop_word.split(" ")
             # skip trivial messages as per "Liu et al., 2018"
-            if stop_word in doc[0].text.lower() + " " + doc[1].text.lower():
+            if stop_word[0] in doc[0].text.lower() and stop_word[1] in doc[1].text.lower():
                 print("t", end='')
                 return False
 
