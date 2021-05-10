@@ -7,8 +7,11 @@ fi
 
 CPUS=$(cat /proc/cpuinfo |grep processor|wc -l)
 
+rm $1/*.{valid,test,train}.{msg,diff}
+
 ls $1| sed 's/\.msg$//g' | sed 's/\.diff$//g' | sort -u |parallel -j $CPUS ./split_test_train_valid.py -v $1/{}
 #exit
+
 
 cat $1/*.valid.msg | tr A-Z a-z > $2.valid.msg
 cat $1/*.valid.diff | tr A-Z a-z > $2.valid.diff
