@@ -17,7 +17,7 @@ max_tokens_diff_default=100
 branches_search_chain = ['main', 'master', 'develop', 'devel']
 branches_search_chain_string = ', '.join([f"'{x}'" for x in branches_search_chain])
 
-stop_prefixes = ["rollback", "bump version", "prepare version", "update changelog", "update gitignore", "update readme", "update submodule", "modify dockerfile", "modify makefile"]
+stop_prefixes = ["rollback", "bump", "revert", "prepare version", "update changelog", "update gitignore", "update readme", "update submodule", "modify dockerfile", "modify makefile"]
 stop_prefixes_string = ', '.join([f"'{x}'" for x in stop_prefixes])
 
 
@@ -171,7 +171,12 @@ def _is_valid_msg(msg):
        for stop_word in stop_prefixes:
             stop_word = stop_word.split(" ")
             # skip trivial messages as per "Liu et al., 2018"
-            if stop_word[0] in doc[0].text.lower() and stop_word[1] in doc[1].text.lower():
+            if len(stop_word) > 1:
+                condition = stop_word[0] in doc[0].text.lower() and stop_word[1] in doc[1].text.lower()
+            else:
+                condition = stop_word[0] in doc[0].text.lower()
+
+            if condition :
                 print("t", end='')
                 return False
 
