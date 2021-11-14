@@ -28,3 +28,12 @@ Help is available with:
 ```
 ./git2bitext.py -h
 ```
+
+### Splitting the files
+The utility `./split_test_train_valid.py` can assist in generating the splits (80% train, 10% validation, 10% test) from the bitexts.
+
+### Crawling the data from online repo
+`massive_clone.sh` reads a text file with one repo per line and parallely downloads the repos.  
+`make_top_github_repos.sh` builds the text file with the top 1000 repositories for a given programming language. Needs GitHub credentials set as $CREDENTIALS env var and a language name set at $LANGUAGE env var.  
+`parallel_generation.sh` launches git2bitext.py in parallel.
+`parallel_split.sh` splits the bitexts in parallel.
